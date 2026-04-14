@@ -1,55 +1,41 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { loginService } from "./service/auth.service";
+export async function loginService(data) {
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://homework-api.noevchanmakara.site/api/v1/").trim();
+    const url = `${baseUrl}auths/login`;
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [
-    Credentials({
-      credentials: {
-        email: {},
-        password: {},
-      },
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
 
-      async authorize(credentials) {
-        const res = await loginService({
-          email: credentials.email,
-          password: credentials.password,
-        });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Login failed");
+    }
 
-        console.log("LOGIN RESPONSE:", res);
+    const result = await response.json();
+    console.log("Logged user in service:", result);
+    return result;
+}
 
-        if (!res || !res.payload?.token) return null;
+export async function registerService(data) {
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://homework-api.noevchanmakara.site/api/v1/").trim();
+    const url = `${baseUrl}auths/register`;
 
-        return {
-          id: res.payload.user?.id || credentials.email,
-          email: credentials.email,
-          accessToken: res.payload.token,
-        };
-      },
-    }),
-  ],
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
 
-  session: {
-    strategy: "jwt",
-  },
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Registration failed");
+    }
 
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.email = user.email;
-        token.accessToken = user.accessToken;
-      }
-      return token;
-    },
-
-    async session({ session, token }) {
-      session.user = {
-        email: token.email,
-      };
-
-      session.accessToken = token.accessToken;
-
-      return session;
-    },
-  },
-});
+    return response.json();
+}

@@ -1,46 +1,41 @@
 export async function loginService(data) {
-  const user = {
-    email: data.email,
-    password: data.password,
-  };
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://homework-api.noevchanmakara.site/api/v1/").trim();
+    const url = `${baseUrl}auths/login`;
 
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL}/auths/login`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(user), 
-    credentials: "include", 
-  });
-
-  const result = await res.json();
-
-  if (!res.ok) {
-    if (result.errors) {
-      const firstError = Object.values(result.errors)[0];
-      throw new Error(firstError);
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Login failed");
     }
-    throw new Error(result.detail || "Login failed");
-  }
 
-  console.log("Logged user in service:", result);
-  return result;
+    const result = await response.json();
+    console.log("Logged user in service:", result);
+    return result;
 }
 
+export async function registerService(data) {
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://homework-api.noevchanmakara.site/api/v1/").trim();
+    const url = `${baseUrl}auths/register`;
 
-// export async function loginService({ email, password }) {
-//   const res = await fetch(
-//     `${process.env.NEXT_PUBLIC_AUTH_BASE_URL}/auths/login`,
-//     {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({ email, password }),
-//     }
-//   );
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
 
-//   return await res.json();
-// }
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Registration failed");
+    }
+
+    return response.json();
+}
